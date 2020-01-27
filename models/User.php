@@ -1,9 +1,7 @@
 <?php
 namespace app\models;
 
-use app\models\Token;
 use Yii;
-use yii\base\NotSupportedException;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 use yii\web\ServerErrorHttpException;
@@ -13,14 +11,7 @@ class User extends ActiveRecord implements IdentityInterface
     const SCENARIO_UPDATE = 'update';
     const SCENARIO_CREDENTIALS = 'credentials';
 
-    const STATUS_ACTIVE = 1;
-    const STATUS_CLOSED = 2;
-
     public $password;
-//    public $username;
-//    public $city_id;
-//    public $phone_number;
-
 
     /**
      * {@inheritdoc}
@@ -160,8 +151,8 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->hasMany(Token::class, ['user_id' => 'id']);
     }
 
-    public function getCity()
+    public function getAdverts()
     {
-        return $this->hasOne(City::class, ['id' => 'city_id']);
+        return $this->hasMany(Advert::class, ['user_id' => 'id']);
     }
 }

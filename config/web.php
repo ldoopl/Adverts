@@ -57,13 +57,8 @@ $config = [
                     'patterns' => [
                         'POST {id}' => 'patch',
                         'GET {id}' => 'view',
-//                        'GET {id}/adverts' => 'adverts',
-
                     ],
                 ],
-//                'POST v1/avatars' => 'avatar/upload',
-//                'POST <module:[\w-]+>/profiles/<id:\d+>' => '<module>/profile',
-//                ['class' => 'yii\rest\UrlRule', 'controller' => 'user'],
                 [
                     'class' => 'yii\rest\UrlRule',
                     'controller' => 'advert',
@@ -71,14 +66,13 @@ $config = [
                         'POST' => 'create',
                         'POST {id}' => 'patch',
                         'PATCH {id}' => 'close',
-                        'GET {id}' => 'view',
                         'GET' => 'index',
-                        'GET {id}/images' => 'images'
+                        'GET {id}' => 'view',
+                        'GET {id}/images' => 'advert-images'
                     ],
                 ],
                 'GET users/<id\d+>/adverts' => 'advert/user-adverts',
                 'GET cities' => 'city',
-                'GET cities/<id\d+>' => 'city/view',
                 'GET categories' => 'category',
             ],
         ],

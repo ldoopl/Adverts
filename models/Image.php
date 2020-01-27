@@ -47,4 +47,12 @@ class Image extends ActiveRecord
             return $this;
         }
     }
+
+    public static function findAdvertImages($advert_id)
+    {
+        return Image::find()
+            ->where(['advert_id' => $advert_id])
+            ->select('id, created_at, url')
+            ->all();
+    }
 }

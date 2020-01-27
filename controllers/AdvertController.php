@@ -28,14 +28,15 @@ class AdvertController extends ActiveController
         return array_merge(parent::behaviors(), [
             'authenticator' => [
                 'class' => HttpBearerAuth::class,
-                'except' => ['view', 'images', 'index']
+                'except' => ['view', 'advert-images', 'index']
             ],
             'access' => [
                 'class' => AccessControl::class,
-                'except' => ['view', 'index', 'images',],
+                'except' => ['view', 'index', 'advert-images',],
                 'rules' => [
                     [   'actions' => ['index', ],
                         'allow' => true,
+                        'roles' => ['?'],
                     ],
                     [
                         'allow' => true,
@@ -43,7 +44,6 @@ class AdvertController extends ActiveController
                     ],
                 ],
             ]
-
         ]);
     }
 
@@ -51,11 +51,11 @@ class AdvertController extends ActiveController
     {
         $actions = parent::actions();
         unset($actions['create'], $actions['view']);
-        $actions['index']['prepareDataProvider'] = [$this, 'prepareDataProviderForAllAdverts'];
+        $actions['index']['prepareDataProvider'] = [$this, 'prepareDataProvider'];
         return $actions;
     }
 
-    public function prepareDataProviderForAllAdverts()
+    public function prepareDataProvider()
     {
         $searchModel = new AdvertSearch();
         return $searchModel->search(Yii::$app->request->get(), Yii::$app->user->getId());
@@ -63,36 +63,21 @@ class AdvertController extends ActiveController
 
     public function actionView($id)
     {
-        $advert = Advert::find(['id' => $id])
-            ->where(['id' => $id])
-//            ->joinWith('image')
-            ->one();
-        $user = User::findOne(['id' => $advert->user_id]);
-//            ->where(['id' => $advert->user_id])
-//            ->one();
-        return [
-            'advert' => $advert,
-            'user' => $user->username
-        ];
+        return Advert::findAdvert($id);
     }
 
     public function actionUserAdverts($id)
     {
-//        return 123;
         $this->checkAccess('user-adverts', $id);
+
         $searchModel = new UserAdvertSearch();
         return $searchModel->search(Yii::$app->request->get(), $id);
     }
 
-//    public function prepareDataProviderForUserAdverts()
-//    {
-//        $searchModel = new UserAdvertSearch();
-//        return $searchModel->search(Yii::$app->request->get());
-//    }
-
     public function actionCreate()
     {
         $model = new Advert();
+        $this->checkAccess('create');
         return $this->createOrUpdate($model);
     }
 
@@ -156,27 +141,25 @@ class AdvertController extends ActiveController
         else return $model->getFirstErrors();
     }
 
-    public function actionImages($id)
+    public function actionAdvertImages($id)
     {
-        return Image::find()
-            ->where(['advert_id' => $id])
-            ->select('id, created_at, url')
-            ->all();
+        return Image::findAdvertImages($id);
     }
 
     public function checkAccess($action, $model = null, $params = [])
     {
-        if ($action === 'patch') {
-            if ($model->user_id !== Yii::$app->user->id)
-                throw new ForbiddenHttpException('У вас нет прав редактировать это объявление');
-        }
-        elseif ($action === 'close'){
-            if ($model->user_id !== Yii::$app->user->id)
-                throw new ForbiddenHttpException('У вас нет прав закрыть это объявление');
-        }
-        elseif ($action === 'user-advert'){
-            if ($model != Yii::$app->user->id)
-                throw new ForbiddenHttpException('У вас нет прав получить эти объявления');
+        switch ($action){
+            case 'patch':
+                if ($model->user_id !== Yii::$app->user->id)
+                    throw new ForbiddenHttpException('У вас нет прав редактировать это объявление');
+                break;
+            case 'close':
+                if ($model->user_id !== Yii::$app->user->id)
+                    throw new ForbiddenHttpException('У вас нет прав закрыть это объявление');
+                break;
+            case 'user-adverts':
+                if ($model != Yii::$app->user->getId())
+                    throw new ForbiddenHttpException('У вас нет прав получить эти объявления');
         }
     }
 }

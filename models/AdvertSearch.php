@@ -11,7 +11,6 @@ class AdvertSearch extends Advert
 {
     public function rules()
     {
-        // только поля определенные в rules() будут доступны для поиска
         return [
             [['title', 'category_id', 'city_id'], 'safe'],
         ];
@@ -24,20 +23,19 @@ class AdvertSearch extends Advert
 
     public function search($params, $user_id)
     {
-        $query = Advert::find()->where(['status' => Advert::STATUS_ACTIVE]);
+        //TODO: rewrite query so it wont return multiple instances of advert for each image
+        $query = (new Query())->from('advert')
+            ->select(['advert.id','title', 'price', 'advert.created_at', 'image.url as first_image',])
+            ->where(['status' => Advert::STATUS_ACTIVE])
+            ->orderBy(['created_at' => SORT_DESC])
+            ->rightJoin('image', 'image.advert_id = advert.id');
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'pagination' => [
                 'pageSize' => 20,
             ],
-            'sort' => [
-                'defaultOrder' => [
-                    'created_at' => SORT_DESC,
-                ]
-            ]
         ]);
-
         if (!($this->load($params, '') && $this->validate())) {
             return $dataProvider;
         }
@@ -47,22 +45,22 @@ class AdvertSearch extends Advert
             $this->city_id = $user->city_id;
         };
 
-//        $query->
-        $query->where([
+        $query->andFilterWhere([
            'category_id' => $this->category_id,
         ]);
-        $query->andWhere([
+
+        $query->andFilterWhere([
             'city_id' => $this->city_id,
         ]);
 
         if (isset($params['search'])){
             $search = $params['search'];
-//            $words = preg_split('/\s+/', $search);
-
-            $query->andFilterWhere(['like', 'title', $search])
-                ->orFilterWhere(['like','description', $search]);
-
+            $query->andFilterWhere ( [ 'OR' ,
+                [ 'like' , 'title' , $search ],
+                [ 'like' , 'description' , $search ],
+            ] );
         }
+//        return $query[0];
         return $dataProvider;
     }
 }

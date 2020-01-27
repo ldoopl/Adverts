@@ -5,7 +5,7 @@ namespace app\models;
 
 
 use yii\db\ActiveRecord;
-use yii\web\ServerErrorHttpException;
+use yii\web\ForbiddenHttpException;
 
 class Advert extends ActiveRecord
 {
@@ -62,10 +62,41 @@ class Advert extends ActiveRecord
         return parent::beforeSave($insert);
     }
 
-    public function getImage()
+    public function getFirstImage()
     {
         return $this->hasMany(Image::class, ['advert_id' => 'id'])
             ->min('created_at');
+    }
+
+    public static function findAdvert($advert_id)
+    {
+        $advert = Advert::findOne(['id' => $advert_id]);
+        if ($advert->status === Advert::STATUS_CLOSED){
+            throw new ForbiddenHttpException('Объявление закрыто');
+        }
+
+        $first_image = Image::findOne(['created_at' => $advert->firstImage]);
+        $user = User::findOne(['id' => $advert->user_id]);
+        $adverts_number = count($user->adverts);
+
+        return [
+            'advert' => [
+                'title' => $advert->title,
+                'created_at' => $advert->created_at,
+                'category_id' => $advert->category_id,
+                'city_id' => $advert->city_id,
+                'price' => $advert->price,
+                'description' => $advert->description,
+                'first_image' => $first_image->url,
+                'creator' => [
+                    'username' => $user->username,
+                    'created_at' => $user->created_at,
+                    'description' => $user->description,
+                    'phone_number' => $user->phone_number,
+                    'adverts_number' => $adverts_number,
+                ],
+            ],
+        ];
     }
 
     public function fields()

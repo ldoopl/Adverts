@@ -11,9 +11,8 @@ class UserAdvertSearch extends Advert
 {
     public function rules()
     {
-        // только поля определенные в rules() будут доступны для поиска
         return [
-            [['title', 'category_id', 'city_id'], 'safe'],
+            [['title', 'category_id', 'status'], 'safe'],
         ];
     }
 
@@ -24,38 +23,39 @@ class UserAdvertSearch extends Advert
 
     public function search($params, $user_id)
     {
-        $query = Advert::find()->where(['user_id' => $user_id]);
+        unset($params['id']);
+
+        //TODO: rewrite query so it wont return multiple instances of advert for each image
+        $query = (new Query())->from('advert')
+            ->select(['advert.id','title', 'price', 'advert.created_at', 'category_id',
+                'city_id', 'description', 'status', 'image.url as first_image'])
+            ->orderBy(['created_at' => SORT_DESC]);
+        $query->innerJoin('image', 'image.advert_id = advert.id');
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'pagination' => [
                 'pageSize' => 20,
             ],
-            'sort' => [
-                'defaultOrder' => [
-                    'created_at' => SORT_DESC,
-                ]
-            ]
         ]);
-
         if (!($this->load($params, '') && $this->validate())) {
             return $dataProvider;
         }
-
-        $query->where([
+        $query->andFilterWhere([
             'category_id' => $this->category_id,
         ]);
-        $query->andWhere([
+        $query->andFilterWhere([
             'status' => $this->status,
         ]);
 
         if (isset($params['search'])){
             $search = $params['search'];
 
-            $query->andFilterWhere(['like', 'title', $search])
-                ->orFilterWhere(['like','description', $search]);
+            $query->andFilterWhere ( [ 'OR' ,
+                [ 'like' , 'title' , $search ],
+                [ 'like' , 'description' , $search ],
+            ] );
         }
-
         return $dataProvider;
     }
 }

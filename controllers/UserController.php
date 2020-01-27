@@ -11,19 +11,11 @@ use Yii;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
-use yii\web\ServerErrorHttpException;
 use yii\filters\auth\HttpBearerAuth;
 
 class UserController extends ActiveController
 {
     public $modelClass = User::class;
-
-//    public function actions()
-//    {
-//        $actions = parent::actions();
-//        unset($actions['update']);
-//        return $actions;
-//    }
 
     public function behaviors()
     {
@@ -45,7 +37,6 @@ class UserController extends ActiveController
                     ],
                 ],
             ]
-
         ]);
     }
 
@@ -113,7 +104,7 @@ class UserController extends ActiveController
     {
         if ($action === 'patch') {
             if ($model->id !== Yii::$app->user->id)
-                throw new ForbiddenHttpException('You are not allowed to update this user');
+                throw new ForbiddenHttpException('Вы не можете изменять данные этого пользователя');
         }
     }
 

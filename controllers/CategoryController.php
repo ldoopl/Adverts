@@ -4,7 +4,7 @@
 namespace app\controllers;
 
 
-use common\models\Category;
+use app\models\Category;
 use yii\data\ActiveDataProvider;
 use yii\rest\ActiveController;
 

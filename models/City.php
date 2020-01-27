@@ -31,16 +31,4 @@ class City extends ActiveRecord
             [['name'], 'unique'],
         ];
     }
-
-    public function getUsers()
-    {
-        return $this->hasMany(User::class, ['city' => 'id']);
-//            ->select(['id', 'username']);
-    }
-
-    public function extraFields()
-    {
-        return ['users'];
-    }
-
 }
